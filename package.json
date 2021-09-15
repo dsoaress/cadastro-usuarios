@@ -5,12 +5,13 @@
   "license": "MIT",
   "scripts": {
     "build": "lerna run build",
-    "build:back": "lerna run build --scope back-end",
-    "build:front": "lerna run build --scope front-end",
+    "build:back": "lerna run build --scope backend",
+    "build:front": "lerna run build --scope frontend",
     "start": "lerna run start",
-    "start:back": "lerna run start --scope back-end",
-    "start:front": "lerna run start --scope front-end",
-    "prisma:push": "lerna run prisma:push --scope back-end",
+    "start:back": "lerna run start --scope backend",
+    "start:front": "lerna run start --scope frontend",
+    "prisma:push": "lerna run prisma:push --scope backend",
+    "prisma:seed": "lerna run prisma:seed --scope backend",
     "lint": "lerna run lint",
     "postinstall": "lerna bootstrap"
   },
