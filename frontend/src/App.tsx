@@ -1,7 +1,11 @@
+import { ChakraProvider } from '@chakra-ui/react'
+
+import { Routes } from './Routes'
+
 export function App() {
   return (
-    <div>
-      <h1>Hello</h1>
-    </div>
+    <ChakraProvider>
+      <Routes />
+    </ChakraProvider>
   )
 }
