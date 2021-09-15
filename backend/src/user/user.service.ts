@@ -6,7 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto'
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create({ code, name, image, birthDate }: CreateUserDto) {
     const codeExists = await this.prisma.user.findUnique({
