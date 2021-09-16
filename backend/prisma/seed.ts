@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { date, internet, name, random } from 'faker'
+import { date, name, random } from 'faker'
 
 const prisma = new PrismaClient()
 
@@ -10,7 +10,6 @@ async function main() {
     const lastName = name.lastName()
     const code = random.word().toLowerCase()
     const fullName = `${firstName} ${lastName}`
-    const image = internet.avatar()
     const birthDate = date.past()
     const createdAt = date.recent()
 
@@ -18,7 +17,6 @@ async function main() {
       data: {
         code,
         name: fullName,
-        image,
         birthDate,
         createdAt
       }

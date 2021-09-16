@@ -1,14 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 
+import { FileService } from '../file/file.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private fileService: FileService) {}
 
-  async create({ code, name, image, birthDate }: CreateUserDto) {
+  async create({ code, name, birthDate }: CreateUserDto, image?: Express.Multer.File) {
     const codeExists = await this.prisma.user.findUnique({
       where: {
         code
@@ -19,11 +20,17 @@ export class UserService {
       throw new BadRequestException('User code already registered')
     }
 
+    let filenameUrl: string | null = null
+    if (image) {
+      const newImage = await this.fileService.create(image)
+      filenameUrl = newImage.filenameUrl
+    }
+
     const user = await this.prisma.user.create({
       data: {
         code,
         name,
-        image,
+        image: filenameUrl,
         birthDate: new Date(birthDate)
       }
     })
