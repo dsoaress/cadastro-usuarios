@@ -16,6 +16,7 @@ import { User } from '../types/User'
 import { formatDate } from '../utils/formatDate'
 import { reverseDate } from '../utils/reverseDate'
 import { Container } from './Container'
+import { FileInput } from './FileInput'
 import { Form } from './Form'
 import { Input } from './Input'
 
@@ -23,6 +24,7 @@ type UserFormData = {
   code: string
   name: string
   birthDate: string
+  image?: string
 }
 
 export function ProfileForm() {
@@ -31,6 +33,9 @@ export function ProfileForm() {
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
   const history = useHistory()
+
+  const FILE_SIZE = 1000000
+  const SUPPORTED_FORMATS = ['image/jpg', 'image/jpeg', 'image/png']
 
   const profileFormSchema = yup.object().shape({
     code: yup.string().required('Código é um campo requerido'),
@@ -41,7 +46,19 @@ export function ProfileForm() {
         /^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$/,
         'A data informada é inválida (dd/mm/aaaa)'
       )
-      .required('Data de aniversário é um campo requerido')
+      .required('Data de aniversário é um campo requerido'),
+    image: yup
+      .mixed()
+      .nullable()
+      .notRequired()
+      .test('FILE_SIZE', 'Arquivo maior que o suportado', value => {
+        return !value || (value && value.length > 0 && value[0].size <= FILE_SIZE)
+      })
+      .test(
+        'FILE_FORMAT',
+        'O aquivo não é um formato suportado',
+        value => !value || (value && value.length > 0 && SUPPORTED_FORMATS.includes(value[0].type))
+      )
   })
 
   const { register, handleSubmit, formState, reset } = useForm({
@@ -68,13 +85,19 @@ export function ProfileForm() {
 
   const handleSubmitProfile: SubmitHandler<UserFormData> = async values => {
     setIsLoading(true)
-    console.log(values.birthDate)
+    const formData = new FormData()
+
+    if (values.image) {
+      formData.append('image', values.image[0])
+    }
+    formData.append('code', values.code)
+    formData.append('name', values.name)
+    formData.append('birthDate', reverseDate(values.birthDate))
 
     if (userId) {
       try {
-        const { data: updatedUser } = await api.patch<User>(`users/${userId}`, {
-          ...values,
-          birthDate: reverseDate(values.birthDate)
+        const { data: updatedUser } = await api.patch<User>(`users/${userId}`, formData, {
+          headers: { 'Content-Type': `multipart/form-data` }
         })
 
         toast({
@@ -89,9 +112,8 @@ export function ProfileForm() {
       }
     } else {
       try {
-        const { data: newUser } = await api.post<User>('users', {
-          ...values,
-          birthDay: reverseDate(values.birthDate)
+        const { data: newUser } = await api.post<User>('users', formData, {
+          headers: { 'Content-Type': `multipart/form-data` }
         })
 
         toast({
@@ -138,14 +160,6 @@ export function ProfileForm() {
           {...register('name')}
         />
         <Input
-          icon={<HiOutlineUser />}
-          label="Nome"
-          type="file"
-          placeholder="Nome completo"
-          // error={errors.name}
-          {...register('name')}
-        />
-        <Input
           icon={<HiOutlineCalendar />}
           label="Data de aniversário"
           placeholder="dd/mm/aaaa"
@@ -153,6 +167,7 @@ export function ProfileForm() {
           mask
           {...register('birthDate')}
         />
+        <FileInput label="Imagem" error={errors.image} {...register('image')} />
 
         <Button type="submit" colorScheme="blue" isLoading={isLoading}>
           Salvar
