@@ -22,6 +22,7 @@ import { Container } from './Container'
 
 export function Users() {
   const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const history = useHistory()
 
   useEffect(() => {
@@ -31,6 +32,8 @@ export function Users() {
         setUsers(data)
       })
       .catch(err => console.log(err))
+
+    setIsLoading(false)
   }, [])
 
   return (
@@ -45,30 +48,7 @@ export function Users() {
       </HStack>
 
       <Stack>
-        {users.length ? (
-          users.map(user => {
-            const birthDate = formatDate(user.birthDate)
-
-            return (
-              <LinkBox bg="gray.100" borderRadius="md" boxShadow="sm" p={4} key={user.id}>
-                <HStack>
-                  <Avatar src={user.image} name={user.name} />
-                  <Box>
-                    <LinkOverlay as={Link} to={`/${user.id}`}>
-                      <Text fontWeight="bold">{user.name}</Text>
-                    </LinkOverlay>
-                    <HStack align="center">
-                      <HiOutlineCalendar />
-                      <Text fontSize="xs" color="gray.500">
-                        {birthDate}
-                      </Text>
-                    </HStack>
-                  </Box>
-                </HStack>
-              </LinkBox>
-            )
-          })
-        ) : (
+        {isLoading && (
           <>
             <Skeleton height="80px" />
             <Skeleton height="80px" />
@@ -78,6 +58,29 @@ export function Users() {
             <Skeleton height="80px" />
           </>
         )}
+
+        {users.map(user => {
+          const birthDate = formatDate(user.birthDate)
+
+          return (
+            <LinkBox bg="gray.100" borderRadius="md" boxShadow="sm" p={4} key={user.id}>
+              <HStack>
+                <Avatar src={user.image} name={user.name} />
+                <Box>
+                  <LinkOverlay as={Link} to={`/${user.id}`}>
+                    <Text fontWeight="bold">{user.name}</Text>
+                  </LinkOverlay>
+                  <HStack align="center">
+                    <HiOutlineCalendar />
+                    <Text fontSize="xs" color="gray.500">
+                      {birthDate}
+                    </Text>
+                  </HStack>
+                </Box>
+              </HStack>
+            </LinkBox>
+          )
+        })}
       </Stack>
     </Container>
   )

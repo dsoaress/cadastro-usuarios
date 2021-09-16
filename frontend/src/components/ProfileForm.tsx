@@ -1,5 +1,6 @@
 import { Button, Heading, HStack, useToast } from '@chakra-ui/react'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { AxiosError } from 'axios'
 import { useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import {
@@ -19,6 +20,7 @@ import { Container } from './Container'
 import { FileInput } from './FileInput'
 import { Form } from './Form'
 import { Input } from './Input'
+import { ProfileCard } from './ProfileCard'
 
 type UserFormData = {
   code: string
@@ -62,7 +64,7 @@ export function ProfileForm() {
   })
 
   const { register, handleSubmit, formState, reset } = useForm({
-    defaultValues: user,
+    defaultValues: { ...user, image: '' },
     resolver: yupResolver(profileFormSchema)
   })
 
@@ -87,9 +89,7 @@ export function ProfileForm() {
     setIsLoading(true)
     const formData = new FormData()
 
-    if (values.image) {
-      formData.append('image', values.image[0])
-    }
+    if (values.image) formData.append('image', values.image[0])
     formData.append('code', values.code)
     formData.append('name', values.name)
     formData.append('birthDate', reverseDate(values.birthDate))
@@ -104,7 +104,20 @@ export function ProfileForm() {
           description: `Usuário(a) ${updatedUser.name} foi atualizado(a)`,
           status: 'success'
         })
-      } catch {
+
+        history.push('/')
+      } catch (err) {
+        const apiError = err as AxiosError
+
+        if (apiError.response?.status === 403) {
+          toast({
+            description: 'Já existe um(a) usuário(a) cadastrado(a) com esse código...',
+            status: 'error'
+          })
+          setIsLoading(false)
+          return
+        }
+
         toast({
           description: 'Nossos servidores estão passando por dificuldades...',
           status: 'error'
@@ -122,7 +135,18 @@ export function ProfileForm() {
         })
 
         history.push('/')
-      } catch {
+      } catch (err) {
+        const apiError = err as AxiosError
+
+        if (apiError.response?.status === 403) {
+          toast({
+            description: 'Já existe um(a) usuário(a) cadastrado(a) com esse código...',
+            status: 'error'
+          })
+          setIsLoading(false)
+          return
+        }
+
         toast({
           description: 'Nossos servidores estão passando por dificuldades...',
           status: 'error'
@@ -145,6 +169,8 @@ export function ProfileForm() {
       </HStack>
 
       <Form onSubmit={handleSubmit(handleSubmitProfile)}>
+        {user && <ProfileCard user={user} />}
+
         <Input
           icon={<HiOutlineAtSymbol />}
           label="Código"
@@ -167,7 +193,7 @@ export function ProfileForm() {
           mask
           {...register('birthDate')}
         />
-        <FileInput label="Imagem" error={errors.image} {...register('image')} />
+        <FileInput label="Imagem" error={errors.image} {...register('image', { value: '' })} />
 
         <Button type="submit" colorScheme="blue" isLoading={isLoading}>
           Salvar

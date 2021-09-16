@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 
 import { FileService } from '../file/file.service'
 import { PrismaService } from '../prisma/prisma.service'
@@ -17,7 +17,7 @@ export class UserService {
     })
 
     if (codeExists) {
-      throw new BadRequestException('User code already registered')
+      throw new ForbiddenException()
     }
 
     let filenameUrl: string | null = null
@@ -58,7 +58,7 @@ export class UserService {
     return user
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto, image?: Express.Multer.File) {
     const user = await this.findOne(id)
 
     if (updateUserDto.code) {
@@ -70,13 +70,27 @@ export class UserService {
 
       if (codeExists) {
         if (user.code !== updateUserDto.code) {
-          throw new BadRequestException('User code already registered')
+          throw new ForbiddenException()
         }
       }
     }
 
     if (updateUserDto.birthDate) {
       updateUserDto.birthDate = new Date(updateUserDto.birthDate)
+    }
+
+    if (image) {
+      const newImage = await this.fileService.create(image)
+      const filenameUrl = newImage.filenameUrl
+
+      await this.prisma.user.update({
+        where: {
+          id
+        },
+        data: {
+          image: filenameUrl
+        }
+      })
     }
 
     const updatedUser = await this.prisma.user.update({

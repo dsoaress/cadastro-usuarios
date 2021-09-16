@@ -41,8 +41,13 @@ export class UserController {
 
   @Patch(':id')
   @UsePipes(ValidationPipe)
-  update(@Param('id', ParametersPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto)
+  @UseInterceptors(FileInterceptor('image'))
+  update(
+    @Param('id', ParametersPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() image?: Express.Multer.File
+  ) {
+    return this.userService.update(id, updateUserDto, image)
   }
 
   @Delete(':id')
